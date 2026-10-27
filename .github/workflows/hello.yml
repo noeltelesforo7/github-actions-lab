@@ -1,0 +1,25 @@
+name: Hola GitHub Actions
+
+on:
+    workflow_dispatch:
+
+    push:
+        branches:
+            - develop
+
+jobs:
+    saludo:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Obtener código del repositorio
+              uses: actions/checkout@v4
+
+            - name: Mostrar saludo e información
+              run: |
+                  echo "Hola desde GitHub Actions!"
+                  echo "Repositorio: ${{ github.repository }}"
+                  echo "Rama: ${{ github.ref_name }}"
+                  echo "Evento: ${{ github.event_name }}" 
+                  echo "Usuario: ${{ github.actor }}"
+                  echo "Commit: ${{ github.sha }}"
