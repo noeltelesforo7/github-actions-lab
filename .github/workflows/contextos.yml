@@ -1,0 +1,54 @@
+name: Variables, contextos  y condiciones
+
+on:
+    workflow_dispatch:
+
+    push:
+        branches:
+            - develop
+            - main
+            - release/**
+            - feature/modulo-3-contextos
+
+env:
+    APP_NAME: github-actions-lab
+    TEAM_NAME: plataforma
+    DEFAULT_ENVIRONMENT: development
+
+jobs:
+    detectar-entorno:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Obtener código
+              uses: actions/checkout@v4
+
+            - name: Mostrar variables y contexto
+              run: |
+                echo "Aplicación: $APP_NAME "
+                echo "Equipo: $TEAM_NAME"
+                echo "Entorno predeterminado: $DEFAULT_ENVIRONMENT"
+                echo "Repositorio: ${{ github.repository }}"
+                echo "Rama: ${{ github.ref_name }}"
+                echo "Evento: ${{ github.event_name }}"
+                echo "Ejecutado por: ${{ github.actor }}"
+                echo "Sistema operativo del runner: ${{ runner.os }}"
+
+            - name: Entorno de desarrollo
+              if: github.ref_name == 'develop'
+              run: 'echo "Ambiente identificado: development"'
+
+            - name: Entorno de pruebas
+              if: startsWith(github.ref_name, 'release/')
+              run: 'echo "Ambiente identificado: staging"'
+
+            - name: Entorno productivo
+              if: github.ref_name == 'main'
+              run: 'echo "Ambiente identificado: production"'
+
+            - name: Rama de trabajo
+              if: |
+                github.ref_name != 'develop' &&
+                github.ref_name != 'main' &&
+                !startsWith(github.ref_name, 'release/')
+              run: 'echo "Ambiente identificado: rama de trabajo o feature"'
