@@ -1,0 +1,44 @@
+name: CI Node.js
+
+on:
+    pull_request:
+        branches:
+            - develop
+            - main
+
+    push:
+        branches:
+            - develop
+            - main
+
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+jobs:
+    test:
+        name: Lint, pruebas y build
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Descargar código
+              uses: actions/checkout@v4
+
+            - name: Configurar Node.js
+              uses: actions/setup-node@v4
+              with:
+                node-version: 20
+                cache: npm
+
+            - name: Instalar dependencias
+              run: npm ci
+
+            - name: Ejecutar Lint
+              run: npm run lint
+
+            - name: Ejecutar pruebas
+              run: npm test
+
+            - name: Generar build
+              run: npm run build
