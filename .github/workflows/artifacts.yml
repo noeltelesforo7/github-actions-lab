@@ -43,11 +43,27 @@ jobs:
             - name: Generar build
               run: npm run build
 
+            - name: Generar información del build
+              run: |
+                mkdir -p build-info
+                echo "Repositorio: ${{ github.repository }}" > build-info/build-info.txt
+                echo "Commit: ${{ github.sha }}" >> build-info/build-info.txt
+                echo "Rama: ${{ github.ref_name }}" >> build-info/build-info.txt
+                echo "Fecha UTC: $(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> build-info/build-info.txt
+
             - name: Publicar build
               uses: actions/upload-artifact@v4
               with:
                 name: aplicacion-compilada
                 path: dist/
+                retention-days: 7
+                if-no-files-found: error
+
+            - name: Publicar información del build
+              uses: actions/upload-artifact@v4
+              with:
+                name: informacion-build
+                path: build-info/
                 retention-days: 7
                 if-no-files-found: error
 
