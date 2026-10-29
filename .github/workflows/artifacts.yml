@@ -1,0 +1,87 @@
+name: Build y validación con artefactos
+
+on:
+    pull_request:
+        branches:
+            - develop
+            - main
+
+    push:
+        branches:
+            - develop
+            - main
+
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+jobs:
+    build:
+        name: Construir y publicar artefactos
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Descargar código
+              uses: actions/checkout@v4
+
+            - name: Configurar Node.js
+              uses: actions/setup-node@v4
+              with:
+                node-version: 20
+                cache: npm
+
+            - name: Instalar dependencias
+              run: npm ci
+
+            - name: Ejecutar Lint
+              run: npm run lint
+
+            - name: Ejecutar pruebas con cobertura
+              run: npm run test:coverage
+
+            - name: Generar build
+              run: npm run build
+
+            - name: Publicar build
+              uses: actions/upload-artifact@v4
+              with:
+                name: aplicacion-compilada
+                path: dist/
+                retention-days: 7
+                if-no-files-found: error
+
+            - name: Reporte de cobertura
+              uses: actions/upload-artifact@v4
+              with:
+                name: reporte-cobertura
+                path: coverage/
+                retention-days: 7
+                if-no-files-found: error
+
+    validate-build:
+        name: Validar artefacto compilado
+        runs-on: ubuntu-latest
+        needs: build
+
+        steps:
+            - name: Descargar build compilado
+              uses: actions/download-artifact@v4
+              with:
+                name: aplicacion-compilada
+                path: downloaded-build
+
+            - name: Mostrar archivos descargados
+              run: |
+                echo "Contenido descargado:"
+                find downloaded-build -type f -print
+
+            - name: Validar archivo principal
+              run: |
+                test -f downloaded-build/calculadora.js
+                echo "El artefacto contiene calculadora.js correctamente."
+
+            - name: Validar contenido del build
+              run: |
+                grep -q "function sumar" downloaded-build/calculadora.js
+                echo "El build contiene la función sumar."
