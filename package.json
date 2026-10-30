@@ -1,0 +1,32 @@
+{
+  "name": "github-actions-lab",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "test": "jest --runInBand",
+    "test:coverage": "jest --coverage --runInBand",
+    "build": "node scripts/build.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/noeltelesforo7/github-actions-lab.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/noeltelesforo7/github-actions-lab/issues"
+  },
+  "homepage": "https://github.com/noeltelesforo7/github-actions-lab#readme",
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.13.0",
+    "globals": "^17.13.0",
+    "jest": "^30.5.2"
+  }
+}

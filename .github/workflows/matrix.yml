@@ -1,0 +1,71 @@
+name: Compatibilidad Node.js
+
+on:
+    pull_request:
+        branches:
+            - develop
+            - main
+    
+    push:
+        branches:
+            - develop
+            - main
+
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+jobs:
+    test:
+        name: Node ${{ matrix.node-version }} en ${{ matrix.os }}${{ matrix.experimental && ' (experimental)' || '' }}
+        runs-on: ${{ matrix.os }}
+
+        strategy:
+            fail-fast: false
+            matrix:
+              os:
+                - ubuntu-latest
+                - windows-latest
+                - macos-latest
+
+              node-version:
+                - 18
+                - 20
+                - 22
+
+              exclude:
+                - os: windows-latest
+                  node-version: 18
+                - os: windows-latest
+                  node-version: 22
+                - os: macos-latest
+                  node-version: 18
+                - os: macos-latest
+                  node-version: 22
+
+              include:
+                - os: ubuntu-latest
+                  node-version: 22
+                  experimental: true
+
+        continue-on-error: ${{ matrix.experimental || false }}
+
+        steps:
+            - name: Descargar código
+              uses: actions/checkout@v4
+
+            - name: Configurar Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ matrix.node-version }}
+                  cache: npm
+
+            - name: Instalar dependencias
+              run: npm ci
+
+            - name: Ejecutar Lint
+              run: npm run lint
+
+            - name: Ejecutar pruebas
+              run: npm test
