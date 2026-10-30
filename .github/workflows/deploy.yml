@@ -1,0 +1,55 @@
+name: Despliegue por ambiente
+
+on:
+    push:
+        branches:
+            - develop
+            - main
+
+    workflow_dispatch:
+        inputs:
+            target_environment:
+                description: Ambiente de destino
+                required: true
+                default: development
+                type: choice
+                options:
+                    - development
+                    - production
+
+permissions:
+    contents: read
+
+jobs:
+    deploy:
+        name: Desplegar aplicación
+        runs-on: ubuntu-latest
+        environment: ${{ github.event_name == 'workflow_dispatch' && inputs.target_environment || github.ref_name == 'main' && 'production' || 'development' }}
+
+        steps:
+            - name: Descargar código
+              uses: actions/checkout@v4
+
+            - name: Mostrar destino de despliegue
+              run: |
+                echo "Ambiente: ${{ github.event_name == 'workflow_dispatch' && inputs.target_environment || github.ref_name == 'main' && 'production' || 'development' }}"
+                echo "URL configurada: ${{ vars.DEPLOY_URL }}"
+
+            - name: Validar acceso a credencial de despliegue
+              shell: bash
+              env:
+                DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
+              run: |
+                if [ -z "$DEPLOY_TOKEN" ]; then
+                  echo "Error: no se encontró el secret DEPLOY_TOKEN."
+                  exit 1
+                fi
+
+                echo "Secret DEPLOY_TOKEN disponible para el despliegue."
+                echo "Longitud del secret: ${#DEPLOY_TOKEN} caracteres."
+
+            - name: Simular despliegue
+              run: |
+                echo "Iniciando despliegue..."
+                sleep 5
+                echo "Despliegue finalizado correctamente."
