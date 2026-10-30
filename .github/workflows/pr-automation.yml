@@ -19,6 +19,38 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
+
+            - name: Etiquetar cambios de documentación
+              uses: actions/github-script@v7
+              with:
+                script: |
+                  const files = await github.paginate(
+                    github.rest.pulls.listFiles,
+                    {
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      pull_number: context.issue.number,
+                      by_page: 100
+                    }
+                  );
+                  
+                  const onlyDocumentation = files.length > 0 &&
+                    files.every((file) =>
+                      file.filename.startsWith('docs/') ||
+                      file.filename.toLowerCase() === 'readme.md'
+                    );
+
+                    if (onlyDocumentation) {
+                      await github.rest.issues.addLabels({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        issue_number: context.issue.number,
+                        labels: ['documentation'] 
+                      });
+
+                      core.info('Etiqueta aplicada: documentation');
+                    }
+
             - name: Etiquetar Pull Request según la rama
               uses: actions/github-script@v7
               with:
