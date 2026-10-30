@@ -5,6 +5,7 @@ on:
         branches:
             - develop
             - main
+            - release/**
 
     workflow_dispatch:
         inputs:
@@ -15,16 +16,20 @@ on:
                 type: choice
                 options:
                     - development
+                    - staging
                     - production
 
 permissions:
     contents: read
 
 jobs:
-    deploy:
-        name: Desplegar aplicación
+    deploy-development:
+        name: Desplegar a develop
         runs-on: ubuntu-latest
-        environment: ${{ github.event_name == 'workflow_dispatch' && inputs.target_environment || github.ref_name == 'main' && 'production' || 'development' }}
+        environment: development
+        if: |
+          (github.event_name == 'push' && github.ref_name == 'develop') ||
+          (github.event_name == 'workflow_dispatch' && inputs.target_environment == 'development')
 
         steps:
             - name: Descargar código
@@ -32,24 +37,96 @@ jobs:
 
             - name: Mostrar destino de despliegue
               run: |
-                echo "Ambiente: ${{ github.event_name == 'workflow_dispatch' && inputs.target_environment || github.ref_name == 'main' && 'production' || 'development' }}"
+                echo "Ambiente: development"
                 echo "URL configurada: ${{ vars.DEPLOY_URL }}"
 
-            - name: Validar acceso a credencial de despliegue
+            - name: Validar credencial de despliegue
               shell: bash
               env:
                 DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
               run: |
                 if [ -z "$DEPLOY_TOKEN" ]; then
-                  echo "Error: no se encontró el secret DEPLOY_TOKEN."
+                  echo "Error: no se encontró el secret DEPLOY_TOKEN para development."
                   exit 1
                 fi
 
-                echo "Secret DEPLOY_TOKEN disponible para el despliegue."
+                echo "Secret DEPLOY_TOKEN disponible"
                 echo "Longitud del secret: ${#DEPLOY_TOKEN} caracteres."
 
             - name: Simular despliegue
               run: |
-                echo "Iniciando despliegue..."
+                echo "Iniciando despliegue a development..."
                 sleep 5
-                echo "Despliegue finalizado correctamente."
+                echo "Despliegue a development finalizado correctamente."
+
+    deploy-staging:
+        name: Desplegar a staging
+        runs-on: ubuntu-latest
+        environment: staging
+        if: |
+          (github.event_name == 'push' && startsWith(github.ref_name, 'release/')) ||
+          (github.event_name == 'workflow_dispatch' && inputs.target_environment == 'staging')
+
+        steps:
+            - name: Descargar código
+              uses: actions/checkout@v4
+
+            - name: Mostrar configuración de despliegue
+              run: |
+                echo "Ambiente: staging"
+                echo "URL configurada: ${{ vars.DEPLOY_URL }}"
+
+            - name: Validar credencial de despliegue
+              shell: bash
+              env:
+                DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
+              run: |
+                if [ -z "$DEPLOY_TOKEN" ]; then
+                  echo "Error: no se encontró el secret DEPLOY_TOKEN para staging."
+                  exit 1
+                fi
+
+                echo "Secret DEPLOY_TOKEN disponible."
+                echo "Longitud del secret: ${#DEPLOY_TOKEN} caracteres."
+
+            - name: Simular despliegue
+              run: |
+                echo "Iniciando despliegue a staging..."
+                sleep 5
+                echo "Despliegue a staging finalizado correctamente."
+
+    deploy-production:
+        name: Desplegar a producción
+        runs-on: ubuntu-latest
+        environment: production
+        if: |
+          (github.event_name == 'push' && github.ref_name == 'main') ||
+          (github.event_name == 'workflow_dispatch' && inputs.target_environment == 'production')
+
+        steps:
+            - name: Descargar código
+              uses: actions/checkout@v4
+
+            - name: Mostrar configuración de despliegue
+              run: |
+                echo "Ambiente: production"
+                echo "URL configurada: ${{ vars.DEPLOY_URL }}"
+
+            - name: Validar credencial de despliegue
+              shell: bash
+              env:
+                DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
+              run: |
+                if [ -z "$DEPLOY_TOKEN" ]; then
+                  echo "Error: no se encontró el secret DEPLOY_TOKEN para production."
+                  exit 1
+                fi
+
+                echo "Secret DEPLOY_TOKEN disponible."
+                echo " Longitud del secret: ${#DEPLOY_TOKEN} caracteres."
+
+            - name: Simular despliegue
+              run: |
+                echo "Iniciando despliegue a production..."
+                sleep 5
+                echo "Despliegue a production finalizado correctamente."
